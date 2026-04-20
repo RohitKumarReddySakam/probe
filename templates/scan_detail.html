@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PROBE — Scan Results</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+<nav class="navbar">
+    <div class="nav-brand">PROBE</div>
+    <div class="nav-links">
+        <a href="/">Dashboard</a>
+        <a href="/reports">Reports</a>
+    </div>
+</nav>
+
+<main class="container">
+    <h1 class="page-title">Scan Results</h1>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-value">{{ scan.target_url }}</div>
+            <div class="stat-label">Target</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value {% if scan.risk_grade %}grade-{{ scan.risk_grade }}{% endif %}">
+                {{ scan.risk_grade or '—' }}
+            </div>
+            <div class="stat-label">Risk Grade</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ '%.1f' | format(scan.risk_score) if scan.risk_score is not none else '—' }}</div>
+            <div class="stat-label">CVSS Score</div>
+        </div>
+        <div class="stat-card alert">
+            <div class="stat-value">{{ scan.critical_count }}</div>
+            <div class="stat-label">Critical</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ scan.finding_count }}</div>
+            <div class="stat-label">Total Findings</div>
+        </div>
+    </div>
+
+    {% if scan.status == 'completed' %}
+    <div style="margin-bottom:16px;display:flex;gap:8px;">
+        <a href="/api/report/{{ scan.id }}/html" class="btn btn-sm">Download HTML Report</a>
+        <a href="/api/report/{{ scan.id }}/json" class="btn btn-sm">Download JSON Report</a>
+    </div>
+    {% endif %}
+
+    <section class="panel">
+        <div class="panel-header">
+            <h2>Findings <span class="count">({{ findings | length }})</span></h2>
+        </div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Severity</th>
+                        <th>CVSS</th>
+                        <th>Plugin</th>
+                        <th>Finding</th>
+                        <th>OWASP</th>
+                        <th>CWE</th>
+                        <th>Recommendation</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for f in findings %}
+                    <tr>
+                        <td><span class="badge sev-{{ f.severity | lower }}">{{ f.severity }}</span></td>
+                        <td>{{ '%.1f' | format(f.cvss) }}</td>
+                        <td>{{ f.plugin }}</td>
+                        <td>{{ f.check_name }}</td>
+                        <td>{{ f.owasp or '—' }}</td>
+                        <td>{{ f.cwe or '—' }}</td>
+                        <td class="finding-rec">{{ f.recommendation }}</td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="7" class="empty">No vulnerabilities found</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+
+<script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+<script src="/static/js/app.js"></script>
+</body>
+</html>

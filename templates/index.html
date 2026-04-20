@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PROBE — Dashboard</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+<nav class="navbar">
+    <div class="nav-brand">PROBE</div>
+    <div class="nav-links">
+        <a href="/" class="active">Dashboard</a>
+        <a href="/reports">Reports</a>
+    </div>
+</nav>
+
+<main class="container">
+    <h1 class="page-title">PROBE</h1>
+
+    <div class="scan-form">
+        <h2>New Scan</h2>
+        <form onsubmit="startScan(event)" class="form-row">
+            <input id="scan-url" class="form-input" type="text"
+                   placeholder="https://example.com" autocomplete="off" required>
+            <button id="scan-btn" class="btn btn-primary" type="submit">Scan</button>
+        </form>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-value">{{ total_scans }}</div>
+            <div class="stat-label">Total Scans</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ completed }}</div>
+            <div class="stat-label">Completed</div>
+        </div>
+        <div class="stat-card alert">
+            <div class="stat-value">{{ critical_findings }}</div>
+            <div class="stat-label">Critical Findings</div>
+        </div>
+    </div>
+
+    <section class="panel">
+        <div class="panel-header">
+            <h2>Recent Scans</h2>
+        </div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Target</th>
+                        <th>Grade</th>
+                        <th>Score</th>
+                        <th>Findings</th>
+                        <th>Critical</th>
+                        <th>Status</th>
+                        <th>Started</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for scan in scans %}
+                    <tr>
+                        <td>{{ scan.target_url }}</td>
+                        <td>
+                            {% if scan.risk_grade %}
+                            <strong class="grade-{{ scan.risk_grade }}">{{ scan.risk_grade }}</strong>
+                            {% else %}—{% endif %}
+                        </td>
+                        <td>{{ '%.1f' | format(scan.risk_score) if scan.risk_score is not none else '—' }}</td>
+                        <td>{{ scan.finding_count }}</td>
+                        <td>
+                            {% if scan.critical_count > 0 %}
+                            <span class="badge sev-critical">{{ scan.critical_count }}</span>
+                            {% else %}0{% endif %}
+                        </td>
+                        <td><span class="status-{{ scan.status }}">{{ scan.status }}</span></td>
+                        <td>{{ scan.created_at.strftime('%Y-%m-%d %H:%M') if scan.created_at else '—' }}</td>
+                        <td>
+                            {% if scan.status == 'completed' %}
+                            <a href="/scan/{{ scan.id }}" class="btn btn-sm">View</a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="8" class="empty">No scans yet — enter a URL above to start</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+
+<script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+<script src="/static/js/app.js"></script>
+</body>
+</html>

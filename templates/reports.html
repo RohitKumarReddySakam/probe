@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PROBE — Reports</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+<nav class="navbar">
+    <div class="nav-brand">PROBE</div>
+    <div class="nav-links">
+        <a href="/">Dashboard</a>
+        <a href="/reports" class="active">Reports</a>
+    </div>
+</nav>
+
+<main class="container">
+    <h1 class="page-title">Scan Reports</h1>
+
+    <section class="panel">
+        <div class="panel-header">
+            <h2>Completed Scans <span class="count">({{ scans | length }})</span></h2>
+        </div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Target</th>
+                        <th>Grade</th>
+                        <th>Score</th>
+                        <th>Findings</th>
+                        <th>Critical</th>
+                        <th>Completed</th>
+                        <th>Downloads</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for scan in scans %}
+                    <tr>
+                        <td><a href="/scan/{{ scan.id }}" style="color:var(--accent)">{{ scan.target_url }}</a></td>
+                        <td><strong class="grade-{{ scan.risk_grade }}">{{ scan.risk_grade or '—' }}</strong></td>
+                        <td>{{ '%.1f' | format(scan.risk_score) if scan.risk_score is not none else '—' }}</td>
+                        <td>{{ scan.finding_count }}</td>
+                        <td>
+                            {% if scan.critical_count > 0 %}
+                            <span class="badge sev-critical">{{ scan.critical_count }}</span>
+                            {% else %}0{% endif %}
+                        </td>
+                        <td>{{ scan.completed_at.strftime('%Y-%m-%d %H:%M') if scan.completed_at else '—' }}</td>
+                        <td style="display:flex;gap:6px;flex-wrap:wrap;">
+                            <a href="/api/report/{{ scan.id }}/html" class="btn btn-sm">HTML</a>
+                            <a href="/api/report/{{ scan.id }}/json" class="btn btn-sm">JSON</a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="7" class="empty">No completed scans</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+
+<script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+<script src="/static/js/app.js"></script>
+</body>
+</html>
